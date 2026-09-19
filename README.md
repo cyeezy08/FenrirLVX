@@ -1,7 +1,7 @@
 # Fenrir v0.1.0
 
 <p align="center">
-  <img src="./assets/tui.gif" alt="Fenrir TUI demo" width="900">
+  <img src="/TUI.gif" alt="Fenrir TUI demo" width="900">
 </p>
 
 **WordPress reconnaissance and auto-triage from the Leviathan stack.**
