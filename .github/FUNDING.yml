@@ -1,0 +1,6 @@
+# GitHub Sponsors button data.
+# Fill BOTH lines with real handles and the "Sponsor" button goes live:
+#   ko_fi  -> free account at https://ko-fi.com (same day, no approval queue)
+#   custom -> your Gumroad checkout (the P0 Feed product link)
+ko_fi: your-kofi-name
+custom: ["https://your-gumroad-product-link"]
