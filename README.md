@@ -29,7 +29,15 @@ FenrirLVX is a focused, low-footprint Go security utility built for authorized o
 
 ## Installation
 
+### Via Homebrew (macOS & Linux)
+
+```bash
+brew install leviathan-offsec/tap/fenrir
+fenrir --help
+```
+
 ### From Release
+
 
 Download the archive for your platform from
 [releases](https://github.com/leviathan-offsec/FenrirLVX/releases). Each archive
