@@ -8,3 +8,4 @@ dist/
 
 # local credentials for regenerating vuln_db.json
 .secrets/
+storage/

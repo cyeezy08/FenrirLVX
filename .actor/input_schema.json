@@ -1,0 +1,1 @@
+{"title": "Fenrir WordPress scan input", "type": "object", "schemaVersion": 1, "properties": {"targets_text": {"title": "Targets", "type": "string", "description": "One URL per line. IMPORTANT: only scan assets you own or have explicit written authorization to assess.", "editor": "textarea", "prefill": "https://example.com"}}, "required": ["targets_text"]}
