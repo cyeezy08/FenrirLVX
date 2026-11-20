@@ -50,7 +50,7 @@ project is against.
 Go tools, 1.26 or newer:
 
 ```bash
-git clone https://github.com/leviathan-offsec/FenrirLVX.git
+git clone https://github.com/cyeezy08/FenrirLVX.git
 cd FenrirLVX
 go test ./... -race -count=1
 golangci-lint run

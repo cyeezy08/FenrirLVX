@@ -34,7 +34,14 @@ func compareSemver(a, b [4]int) int {
 }
 
 func inRange(version, from, to string, fromInc, toInc bool) bool {
-	if version == "" || version == "unknown" {
+	// Unknown or malformed versions must not compare as numeric zero.
+	if !looksLikeVersion(version) {
+		return false
+	}
+	if from != "" && from != "*" && !looksLikeVersion(from) {
+		return false
+	}
+	if to != "" && to != "*" && !looksLikeVersion(to) {
 		return false
 	}
 	v := parseSemver(version)
@@ -74,7 +81,7 @@ func looksLikeVersion(v string) bool {
 		return false
 	}
 	for _, p := range parts {
-		if len(p) >= 5 {
+		if p == "" || len(p) >= 5 {
 			return false
 		}
 	}
