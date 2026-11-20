@@ -1,183 +1,107 @@
-# FenrirLVX
-
 <p align="center">
-  <img src="/TUI.gif" alt="Fenrir TUI demo" width="900">
+  <img src="assets/leviathan-x-header.svg" alt="Leviathan X: FenrirLVX, WordPress component intelligence" width="100%">
 </p>
 
-**High-speed Go CLI for WordPress attack surface mapping, plugin fingerprinting, and offline CVE correlation.**
+# FenrirLVX
 
-FenrirLVX is a focused, low-footprint Go security utility built for authorized offensive security operations, bug bounty triage, and perimeter auditing. It fingerprints WordPress targets, enumerates plugins and themes, correlates detected versions against a local vulnerability database (`vuln_db.json`), and outputs deterministic triage findings without external API dependencies.
+**WordPress component evidence and local vulnerability-advisory correlation.**
 
-> [!IMPORTANT]
-> Use FenrirLVX only against assets you own or have explicit written authorization to assess.
+FenrirLVX is a Go command-line tool from **Leviathan X**. It identifies WordPress components on an authorized site, compares detected versions against a bundled advisory snapshot, and reports coverage gaps rather than treating missing advisory data as proof of safety.
 
----
+[CI](https://github.com/cyeezy08/FenrirLVX/actions/workflows/ci.yml) | [Releases](https://github.com/cyeezy08/FenrirLVX/releases) | [Security policy](SECURITY.md) | [License](LICENSE)
 
-## Capabilities
+> **Scope:** Only run network-facing checks against systems you own or are explicitly authorized to assess. Passive provider observations do not establish permission to probe the resulting hosts.
 
-- **Direct Fingerprinting:** Single-target WordPress and component detection with zero external API dependencies.
-- **Component Enumeration:** Plugin and theme version discovery via static asset inspection and header telemetry.
-- **Offline Vulnerability Correlation:** Local mapping against CVE and Wordfence vulnerability data (`vuln_db.json`).
-- **Database Coverage Reporting:** Every result states how much of the target the database could actually speak to, so a clean verdict is distinguishable from a stale one.
-- **Per-Match Evidence:** Each finding carries the detected version, the advisory range it fell in, and whether that range was unbounded.
-- **Confidence Scoring:** Version signal validation factoring in changelogs, cache signatures, and response headers.
-- **Shodan Query Support:** Optional passive host discovery for scoped enterprise ranges.
-- **Concurrent Mass Triage:** Multi-target worker pool with honeypot and canary edge filtering.
-- **Cross-Platform:** Native single-binary builds for Linux, macOS, and Windows (`amd64`, `arm64`, `386`).
+## What it does
 
----
+| Stage | Function | Evidence or limitation |
+| --- | --- | --- |
+| Fingerprint | Identify WordPress signals in retrieved web responses | HTTP observations and component signals, not proof of a vulnerable installation |
+| Enumerate | Extract plugin and theme indicators from an authorized target | Unknown and unreadable versions remain unknown |
+| Correlate | Compare plugin versions with `vuln_db.json` advisory ranges | Matches are advisory candidates, not exploit confirmation |
+| Report | Display affected components, CVEs, CVSS and confidence indicators | Report how many detected plugins had no matching advisory coverage |
+| Enrich | Optional Shodan context for a declared, authorized target | Depends on separate provider access; not needed for local advisory matching |
 
-## Installation
+The range matcher uses dotted numeric component versions. It deliberately rejects malformed and non-numeric versions rather than comparing them as zero. Open-ended advisory ranges are flagged; they require human interpretation.
 
-### Via Homebrew (macOS & Linux)
+## Real terminal view
 
-```bash
-brew install leviathan-offsec/tap/fenrir
-fenrir --help
-```
+<p align="center">
+  <img src="TUI.gif" alt="Recorded FenrirLVX terminal interface" width="900">
+</p>
 
-### From Release
+This is an existing repository recording, not a generated demonstration or a statement that current targets are vulnerable.
 
+## Quickstart
 
-Download the archive for your platform from
-[releases](https://github.com/leviathan-offsec/FenrirLVX/releases). Each archive
-contains the binary, `vuln_db.json`, and a `SHA256SUMS` file. Verify it:
+Requires **Go 1.27 or newer**, matching `go.mod`.
 
 ```bash
-sha256sum -c SHA256SUMS --ignore-missing
-./fenrir-v0.1.0-linux-amd64 --help
-```
-
-**Run it from the directory containing `vuln_db.json`.** The database is looked
-up by relative path, so the binary and the JSON file need to sit together.
-
-### From Source
-
-```bash
-git clone https://github.com/leviathan-offsec/FenrirLVX.git
+git clone https://github.com/cyeezy08/FenrirLVX.git
 cd FenrirLVX
 go build -o fenrir .
-./fenrir --help
+./fenrir version
+./fenrir scan -t https://staging.example.org
 ```
 
-`vuln_db.json` is committed, so a source build is fully offline-capable with no
-extra setup. Requires Go 1.27 or newer.
+`vuln_db.json` must be accessible from the working directory. The source repository includes the snapshot. The tool does not download an updated CVE catalog automatically.
 
-### Regenerating the Database
+On Windows, build with `go build -o fenrir.exe .` and use `.\fenrir.exe`. For release binaries, download the matching platform archive from [Releases](https://github.com/cyeezy08/FenrirLVX/releases), verify the published `SHA256SUMS`, and retain the bundled advisory file alongside the executable.
 
-`vuln_db.json` is generated from a Wordfence export, which is not committed
-because of its size. To rebuild it from your own feed:
+### Commands
 
-```bash
-# needs the Wordfence API key and an export
-cp wordfence_production.json .
-go run ./tools/convertor.go
-```
+| Command | Purpose |
+| --- | --- |
+| `fenrir scan -t URL` | Direct WordPress inspection and local advisory correlation |
+| `fenrir wordpress -t DOMAIN` | Domain inspection with optional Shodan enrichment and XML-RPC response check |
+| `fenrir mass` | Legacy multi-target provider query workflow. Use only for an explicitly approved asset inventory |
+| `fenrir version` | Build identification |
+| `fenrir --help` | Supported flags and syntax |
 
-The convertor parses the feed and rewrites `vuln_db.json` in place. It is a
-maintenance tool, not part of a normal build.
+Shodan enrichment is optional and requires the `SHODAN_API_KEY` value passed through the current CLI's `-k` flag. Command-line secrets can be visible in process listings or shell history. Use a trusted environment and never commit keys to GitHub.
 
----
+The network client verifies TLS certificates by default, limits response bodies, and does not follow redirects to different origins. Failed requests are not interpreted as clean vulnerability results.
 
-## Usage
+## Understanding results
 
-### Single-Target Scan
+A finding should be read as **observed component + detected version + advisory range**, not as proof of exploitability. Correlation is bounded by the age, scope and completeness of the locally supplied data.
 
-Scan an authorized target URL directly without third-party services:
-
-```bash
-fenrir scan -t https://staging.example.com
-```
-
-The scan outputs detected CMS technologies, active plugins, detected themes, and correlations against local vulnerability definitions with confidence scoring.
-
-### Target Recon with Shodan Enrichment
-
-```bash
-export SHODAN_API_KEY="your-api-key"
-fenrir wordpress -t staging.example.com -k $SHODAN_API_KEY
-```
-
-*The Shodan key is optional; direct scanning functions entirely offline.*
-
-### Mass Triage via Shodan Query
-
-```bash
-fenrir mass -k $SHODAN_API_KEY -q 'http.component:"WordPress" org:"TargetOrg"' -p 1 -d 5
-```
-
-### Key CLI Flags
-
-| Flag | Supported Commands | Description |
-| :--- | :--- | :--- |
-| `-t` | `scan`, `wordpress` | Target URL or domain |
-| `-k` | `wordpress`, `mass` | Shodan API key (optional) |
-| `-q` | `mass` | Shodan search query filter |
-| `-p` | `mass` | Total result pages to fetch (default: 1) |
-| `-d` | `mass` | Polling delay in seconds between queries (default: 5) |
-| `-P` | `mass` | Enable strict/precision version matching |
-
----
-
-## Triage Console Taxonomy
-
-FenrirLVX utilizes deterministic severity signaling in its terminal output:
+For example, if three of seven observed plugins appear in the advisory snapshot, the report discloses **3/7 covered, 4 without advisory coverage**. It does not claim that all seven are safe.
 
 ```text
-[+] Clean       No matching vulnerability signature in local database
-[!]             Low or medium-severity signal / unverified version match
-[!!]            High-severity vulnerability signature detected
-[!!!]           Critical CVSS / exploit-confirmed vulnerability signature
-[SKIP]          Honeypot, WAF canary, or synthetic response filtered
+Coverage: detected=7, matched=3, without-advisories=4
+Result: no matched advisory does not mean no vulnerability
 ```
 
-A clean verdict also reports database coverage:
+The block above illustrates how to interpret coverage; it is not a scan of a real target. Review `pkg/engine/vuln.go`, `pkg/engine/semver.go`, and the tests for the precise matching rules.
 
-```text
-[+] staging.example.com Clean
-    database coverage  3/7 plugins matched  4 with no advisory data
-```
+## Advisory data
 
-> [!IMPORTANT]
-> `Clean` means no local signature matched, not that the target is free of
-> known issues. Four plugins had no advisory data in this database, and that
-> gap is stated rather than hidden. An offline scanner cannot prove absence.
-> It can only report what its data covers.
+The included `vuln_db.json` is a **snapshot**. It is not guaranteed to be current, complete or independently validated. The maintenance converter in `tools/convertor.go` supports rebuilding this file from a lawfully obtained Wordfence export; data-access rights and feed terms remain the operator's responsibility.
 
-> [!NOTE]
-> Plugins with an unbounded advisory (a `*` on either version bound) will
-> match any detected version. Those matches are flagged so you can discount
-> them.
+After updating a feed, review provenance and mapping changes, then run the test suite before releasing a new binary. Missing data must remain visible in reports.
 
----
-
-## Project Structure
-
-```text
-cmd/          Cobra command wiring and CLI interface
-pkg/banner/   Console branding and output telemetry
-pkg/engine/   Fingerprinting, asset enumeration, and CVE correlation
-pkg/shodan/   Shodan host discovery client
-tools/        Database convertor and release build script
-build.ps1     Cross-platform release build (Windows)
-vuln_db.json  Local vulnerability definitions and signatures
-```
-
-## Development
+## Development and release quality
 
 ```bash
-go build ./...
-go test ./...
+go mod download
+go test ./... -count=1
 go vet ./...
+go build ./...
 ```
 
-The `pkg/engine` tests cover range-boundary handling, version parsing,
-coverage accounting and the clean-path disclosure. They are the regression net
-for the two failure modes that matter here: a plugin silently missing from the
-database, and a match firing on an advisory with no upper bound.
+The repository includes regression coverage for advisory bounds, unreadable versions, coverage disclosure and evidence classification. GitHub Actions is the verification source for the current branch; a successful historical CI run does not validate unmerged changes.
 
----
+The release workflow builds platform archives and records checksums. Inspect its workflow and published artifacts rather than assuming a release exists for every commit.
 
-## License
+## Leviathan X tooling
 
-MIT License. Developed by `@cyeezy08` for [Leviathan OffSec](https://leviathan.ac).
+FenrirLVX is one focused tool in the Leviathan X suite:
+
+- **[HostageLVX](https://github.com/cyeezy08/HostageLVX):** dangling DNS verification and careful provider fingerprint classification.
+- **[surfacediff](https://github.com/cyeezy08/surfacediff):** reproducible asset snapshots, field-level changes and historical evidence.
+- **FenrirLVX:** WordPress component observation, advisory ranges and coverage accounting.
+
+The CLI tools remain independently usable. A unified intelligence workbench is a separate workstream, not a feature claimed to be shipped in this repository.
+
+**Security reporting:** See [SECURITY.md](SECURITY.md). **License:** MIT.
