@@ -38,6 +38,7 @@ jobs:
           unformatted="$(gofmt -l .)"
           if [ -n "$unformatted" ]; then
             printf 'Files not gofmt-clean:\n%s\n' "$unformatted"
+            gofmt -d pkg/engine/fingerprint.go | head -100
             exit 1
           fi
 
