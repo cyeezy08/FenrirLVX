@@ -1,6 +1,8 @@
-<p align="center">
-  <img src="assets/leviathan-x-header.svg" alt="Leviathan X: FenrirLVX, WordPress component intelligence" width="100%">
-</p>
+```text
+  ______________
+ /  F E N R I R /   LEVIATHAN X   /   COMPONENT INTELLIGENCE
+/______________/    WordPress evidence > version > advisory
+```
 
 # FenrirLVX
 
