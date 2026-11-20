@@ -20,7 +20,7 @@ func Print() {
 /_/    \___/_/ /_/_/_/  /_/
 `
 	fmt.Printf("%s%s%s\n", Red, ascii, Reset)
-	fmt.Printf("%sLEVIATHAN.AC // FENRIR%s\n", White, Reset)
-	fmt.Printf("%sWordPress Recon // Auto Triage%s\n", Cyan, Reset)
+	fmt.Printf("%sLEVIATHAN X // FENRIRLVX%s\n", White, Reset)
+	fmt.Printf("%sWordPress Evidence // Advisory Correlation%s\n", Cyan, Reset)
 	fmt.Printf("%s[*]%s Leviathan console // scoped operations only\n\n", Green, Reset)
 }
