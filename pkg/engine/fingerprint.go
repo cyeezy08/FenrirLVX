@@ -42,23 +42,20 @@ func normalizeURL(raw string) string {
 	return scheme + host + path
 }
 
+// maxFingerprintBodyBytes limits responses to prevent unbounded memory use.
+const maxFingerprintBodyBytes int64 = 4 << 20
+
+// TLS verification stays enabled. For IP-based requests with a declared hostname,
+// use that hostname for certificate validation as well as the HTTP Host header.
 var newTransport = func(hostHeader string) *http.Transport {
-	return &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-			ServerName:         hostHeader,
-		},
+	tr := &http.Transport{
 		DialContext: (&net.Dialer{Timeout: 5 * time.Second}).DialContext,
 		Proxy:       http.ProxyFromEnvironment,
 	}
-}
-
-var httpClient = &http.Client{
-	Timeout: 5 * time.Second,
-	Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Proxy:           http.ProxyFromEnvironment,
-	},
+	if hostHeader != "" {
+		tr.TLSClientConfig = &tls.Config{ServerName: hostHeader}
+	}
+	return tr
 }
 
 func doRequest(rawURL string, hostHeader string) (*http.Response, []byte, error) {
@@ -74,14 +71,31 @@ func doRequest(rawURL string, hostHeader string) (*http.Response, []byte, error)
 		req.Host = hostHeader
 	}
 
-	client := &http.Client{Transport: newTransport(hostHeader), Timeout: 10 * time.Second}
+	client := &http.Client{
+		Transport: newTransport(hostHeader),
+		Timeout:   10 * time.Second,
+		// Do not follow redirects to a different host without authorization.
+		CheckRedirect: func(next *http.Request, via []*http.Request) error {
+			if len(via) >= 10 || (len(via) > 0 && !strings.EqualFold(next.URL.Hostname(), via[0].URL.Hostname())) {
+				return http.ErrUseLastResponse
+			}
+			return nil
+		},
+	}
+	defer client.CloseIdleConnections()
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxFingerprintBodyBytes+1))
+	if err != nil {
+		return nil, nil, fmt.Errorf("read fingerprint response: %w", err)
+	}
+	if int64(len(body)) > maxFingerprintBodyBytes {
+		return nil, nil, fmt.Errorf("fingerprint response exceeds %d bytes", maxFingerprintBodyBytes)
+	}
 	return resp, body, nil
 }
 
@@ -169,4 +183,3 @@ func CheckXMLRPC(rawURL string) bool {
 	return resp.StatusCode == 200 || resp.StatusCode == 405
 }
 
-var _ = fmt.Sprintf
