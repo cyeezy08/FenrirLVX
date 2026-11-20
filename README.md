@@ -28,6 +28,8 @@ The range matcher uses dotted numeric component versions. It deliberately reject
 
 ## Real terminal view
 
+The TUI recording below is the existing real session. The separate [offline CLI capture workflow](https://github.com/cyeezy08/FenrirLVX/actions/workflows/offline-demo.yml) builds the actual Go command, records its own help/banner output and publishes a terminal SVG plus raw text as CI artifacts. No generated scan result is presented as evidence.
+
 <p align="center">
   <img src="TUI.gif" alt="Recorded FenrirLVX terminal interface" width="900">
 </p>
