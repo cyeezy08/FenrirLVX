@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+const maxReadmeBytes = 256 << 10
+const maxPluginAPIBytes = 512 << 10
+
 type WPPlugin struct {
 	Plugin  string `json:"plugin"`
 	Status  string `json:"status"`
@@ -34,7 +37,11 @@ func GetPluginVersionFromReadme(baseURL, slug string) string {
 		return ""
 	}
 
-	body, _ := io.ReadAll(resp.Body)
+	// A plugin readme is metadata, not an unlimited response stream.
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxReadmeBytes+1))
+	if err != nil || len(body) > maxReadmeBytes {
+		return ""
+	}
 	re := regexp.MustCompile(`(?i)Stable tag:\s*([0-9.]+)`)
 	m := re.FindStringSubmatch(string(body))
 	if len(m) > 1 {
@@ -52,13 +59,19 @@ func Enumerate(url string, body []byte) (map[string]string, []string) {
 	// 1. REST API (highest trust)
 	apiURL := strings.TrimSuffix(url, "/") + "/wp-json/wp/v2/plugins"
 	resp, err := httpClient.Get(apiURL)
-	if err == nil && resp != nil && resp.StatusCode == 200 {
+	if err == nil && resp != nil {
 		defer func() { _ = resp.Body.Close() }()
-		apiBody, _ := io.ReadAll(resp.Body)
-		var apiPlugins []WPPlugin
-		if err := json.Unmarshal(apiBody, &apiPlugins); err == nil {
-			for _, p := range apiPlugins {
-				plugins[p.Plugin] = p.Version
+		if resp.StatusCode == http.StatusOK {
+			apiBody, readErr := io.ReadAll(io.LimitReader(resp.Body, maxPluginAPIBytes+1))
+			if readErr == nil && len(apiBody) <= maxPluginAPIBytes {
+				var apiPlugins []WPPlugin
+				if json.Unmarshal(apiBody, &apiPlugins) == nil {
+					for _, p := range apiPlugins {
+						if p.Plugin != "" && looksLikeVersion(p.Version) {
+							plugins[p.Plugin] = p.Version
+						}
+					}
+				}
 			}
 		}
 	}
