@@ -185,4 +185,3 @@ func CheckXMLRPC(rawURL string) bool {
 	defer func() { _ = resp.Body.Close() }()
 	return resp.StatusCode == 200 || resp.StatusCode == 405
 }
-
