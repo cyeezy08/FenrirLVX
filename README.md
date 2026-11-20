@@ -1,6 +1,8 @@
-<p align="center">
-  <img src="assets/leviathan-x-header.svg" alt="Leviathan X: FenrirLVX, WordPress component intelligence" width="100%">
-</p>
+```text
+  ______________
+ /  F E N R I R /   LEVIATHAN X   /   COMPONENT INTELLIGENCE
+/______________/    WordPress evidence > version > advisory
+```
 
 # FenrirLVX
 
@@ -25,6 +27,8 @@ FenrirLVX is a Go command-line tool from **Leviathan X**. It identifies WordPres
 The range matcher uses dotted numeric component versions. It deliberately rejects malformed and non-numeric versions rather than comparing them as zero. Open-ended advisory ranges are flagged; they require human interpretation.
 
 ## Real terminal view
+
+The TUI recording below is the existing real session. The separate [offline CLI capture workflow](https://github.com/cyeezy08/FenrirLVX/actions/workflows/offline-demo.yml) builds the actual Go command, records its own help/banner output and publishes a terminal SVG plus raw text as CI artifacts. No generated scan result is presented as evidence.
 
 <p align="center">
   <img src="TUI.gif" alt="Recorded FenrirLVX terminal interface" width="900">
