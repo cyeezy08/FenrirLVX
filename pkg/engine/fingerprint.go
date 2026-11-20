@@ -42,6 +42,9 @@ func normalizeURL(raw string) string {
 	return scheme + host + path
 }
 
+// The shared enumeration client uses Go's default TLS verification.
+var httpClient = &http.Client{Timeout: 5 * time.Second}
+
 // maxFingerprintBodyBytes limits responses to prevent unbounded memory use.
 const maxFingerprintBodyBytes int64 = 4 << 20
 
