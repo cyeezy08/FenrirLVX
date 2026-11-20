@@ -76,7 +76,7 @@ func doRequest(rawURL string, hostHeader string) (*http.Response, []byte, error)
 		Timeout:   10 * time.Second,
 		// Do not follow redirects to a different host without authorization.
 		CheckRedirect: func(next *http.Request, via []*http.Request) error {
-			if len(via) >= 10 || (len(via) > 0 && !strings.EqualFold(next.URL.Hostname(), via[0].URL.Hostname())) {
+			if len(via) >= 10 || (len(via) > 0 && (next.URL.Scheme != via[0].URL.Scheme || !strings.EqualFold(next.URL.Host, via[0].URL.Host))) {
 				return http.ErrUseLastResponse
 			}
 			return nil
