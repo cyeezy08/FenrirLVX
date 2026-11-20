@@ -51,6 +51,10 @@ jobs:
       - name: Tests
         run: go test ./... -race -count=1 -timeout 120s
 
+      - name: Offline advisory matching microbenchmark
+        if: matrix.os == 'ubuntu-latest'
+        run: go test ./pkg/engine -run "^$" -bench "BenchmarkLocalAdvisoryMatching" -benchtime=200ms -benchmem
+
       - name: CLI smoke test
         shell: bash
         run: |
