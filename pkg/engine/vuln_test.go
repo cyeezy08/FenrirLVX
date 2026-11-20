@@ -129,6 +129,10 @@ func TestInRangeBoundaries(t *testing.T) {
 		{"5.5", "", "6.0", false, true, true},
 		{"", "1.0", "6.0", true, true, false},
 		{"unknown", "1.0", "6.0", true, true, false},
+		{"not-a-version", "1.0", "6.0", true, true, false},
+		{"0.0", "not-a-bound", "6.0", true, true, false},
+		{"0.0", "0.0", "1..0", true, true, false},
+		{"1..0", "*", "*", false, false, false},
 	}
 	for _, c := range cases {
 		if got := inRange(c.version, c.from, c.to, c.fromInc, c.toInc); got != c.want {
@@ -142,7 +146,7 @@ func TestInRangeBoundaries(t *testing.T) {
 // compares as a real version, so this documents the known sharp edge rather
 // than pretending it is handled.
 func TestLooksLikeVersionRejectsJunk(t *testing.T) {
-	bad := []string{"", "unknown", "beta", "5.8-beta", "v2.1.3", strings.Repeat("9", 40)}
+	bad := []string{"", "unknown", "beta", "5.8-beta", "v2.1.3", "1..2", ".1", "1.", strings.Repeat("9", 40)}
 	for _, v := range bad {
 		if looksLikeVersion(v) {
 			t.Errorf("looksLikeVersion(%q) = true, want false", v)
