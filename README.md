@@ -46,7 +46,7 @@ go build -o fenrir .
 
 `vuln_db.json` must be accessible from the working directory. The source repository includes the snapshot. The tool does not download an updated CVE catalog automatically.
 
-On Windows, build with `go build -o fenrir.exe .` and use `.\fenrir.exe`. For release binaries, download the matching platform archive from [Releases](https://github.com/cyeezy08/FenrirLVX/releases), verify the published `SHA256SUMS`, and retain the bundled advisory file alongside the executable.
+On Windows, build with `go build -o fenrir.exe .` and use `.\fenrir.exe`. For release binaries, download the matching platform archive from [Releases](https://github.com/cyeezy08/FenrirLVX/releases), verify the published `checksums.sha256` for release `v0.1.0`, and retain the advisory snapshot required by the tool. Older legacy-tagged archives use a separate `SHA256SUMS` file.
 
 ### Commands
 
