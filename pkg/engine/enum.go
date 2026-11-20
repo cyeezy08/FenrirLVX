@@ -8,10 +8,8 @@ import (
 	"strings"
 )
 
-const (
-	maxReadmeBytes = 256 << 10
-	maxPluginAPIBytes = 512 << 10
-)
+const maxReadmeBytes = 256 << 10
+const maxPluginAPIBytes = 512 << 10
 
 type WPPlugin struct {
 	Plugin  string `json:"plugin"`
